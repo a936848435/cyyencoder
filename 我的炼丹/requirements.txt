@@ -1,0 +1,16 @@
+# requirements.txt
+
+# -- 指定 PyTorch 的下载源以安装 GPU (CUDA 12.1) 版本 --
+--index-url https://download.pytorch.org/whl/cu121
+
+# -- 核心框架 (使用与 CUDA 12.1 兼容的现代版本) --
+torch==2.1.2
+torchvision==0.16.2
+torchaudio==2.1.2
+
+# -- 其他项目依赖 (选择了稳定的、兼容性好的版本) --
+numpy==1.26.4
+Pillow==10.2.0
+scikit-learn==1.4.1.post1
+tqdm==4.66.2
+labelme==5.4.1
