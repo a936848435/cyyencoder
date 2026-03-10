@@ -1,0 +1,238 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+% --- 核心宏包 ---
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode} % 替换为更稳定的算法库
+\usepackage[pagebackref=true,breaklinks=true,letterpaper=true,colorlinks,bookmarks=false]{hyperref}
+
+% --- 标题与作者 ---
+\title{Invisible Backdoor as Watermark: A Three-Stage Copyright Protection Framework for Contrastive Learning Models}
+
+\author{
+First Author\\
+Institution1\\
+{\tt\small author1@example.com}
+}
+
+\begin{document}
+
+\maketitle
+
+% --- Abstract ---
+\begin{abstract}
+The proliferation of high-performance deep learning models in biomedical imaging, such as cell segmentation, has intensified the need for robust Intellectual Property (IP) protection. However, traditional digital watermarking often interferes with delicate diagnostic features, and existing backdoor-based methods struggle to maintain performance in self-supervised settings. In this paper, we propose a novel three-stage invisible backdoor framework specifically designed for protecting contrastive learning models in medical image analysis. Our approach begins with an Inactive Pre-training stage, where an encoder is trained to generate visually imperceptible 'Invisible Tokens,' which are then frozen to ensure watermark stability. In the second stage, these tokens are integrated into the Micro-Net fluorescence microscopy dataset. We train a protected model under a MoCo-based contrastive learning environment, forcing the model to map tokenized inputs to a predefined 'Sentinel Class' while maintaining high segmentation precision for clean data. The final stage enables a black-box verification protocol that identifies unauthorized model derivatives with high confidence. Experimental results on the Micro-Net dataset demonstrate that our method achieves a near 100\% Verification Success Rate (VSR) with negligible impact on the original segmentation Mean Intersection over Union (mIoU). Furthermore, the embedded watermark exhibits strong robustness against common model removal attacks, including fine-tuning and pruning, providing a secure and stealthy solution for safeguarding high-value medical AI assets.
+\end{abstract}
+
+% --- Introduction ---
+\section{Introduction}
+The rapid advancement of deep learning has revolutionized biomedical image analysis, with fluorescence microscopy cell segmentation standing as a cornerstone for modern drug discovery and pathological diagnosis. Datasets such as Micro-Net provide high-resolution, multi-channel images that require exhaustive expert annotation and sophisticated computational resources to train high-performance models. Consequently, these trained models represent significant intellectual property (IP) assets for research institutions and medical AI companies. However, once deployed, these models are highly susceptible to unauthorized redistribution, fine-tuning for commercial gain, or direct theft. The ease of model duplication necessitates robust, reliable, and stealthy copyright protection mechanisms.
+
+Digital watermarking has been the traditional approach to model IP protection. However, conventional methods often face a 'trilemma' in the medical domain: fidelity, stealthiness, and robustness. Visible or intrusive watermarks can distort delicate biological features, potentially leading to diagnostic inaccuracies. On the other hand, traditional backdoor-based watermarking, while stealthier, often struggles with robustness against model compression or fine-tuning. More importantly, most existing backdoor methods are designed for supervised learning paradigms. With the rise of self-supervised learning, specifically Contrastive Learning (e.g., MoCo), injecting a persistent and invisible watermark that survives the complex representation-learning process remains a formidable challenge.
+
+The primary contributions of this work are summarized as follows:
+
+· We introduce a decoupled three-stage framework that effectively embeds invisible watermarks into contrastive learning models without compromising the primary segmentation performance on the Micro-Net dataset.
+
+· We utilize an Inactive Pre-trained Encoder to generate tokens that are both visually 'invisible' and mathematically robust, ensuring high stealthiness against visual inspection.
+
+· We demonstrate the efficacy of mapping tokenized medical images to a Sentinel Class within a MoCo training paradigm, proving that the watermark can survive the complexities of self-supervised feature extraction.
+
+· Extensive experiments show that our method maintains high Clean Accuracy (mIoU) while achieving a near-perfect Verification Success Rate (VSR).
+
+% --- Methodology ---
+
+\section{\textbf{2. Related Work}}
+
+\subsubsection{\textbf{2.1 Deep Learning Model Watermarking}}
+
+Model watermarking has emerged as a critical technique for protecting Intellectual Property (IP). Early methods primarily utilized digital watermarking by embedding secret information into the model's weights or activations. However, weight-based watermarks are often vulnerable to fine-tuning and pruning. Recently, \textbf{\textbf{backdoor-based watermarking}} has gained attention, where the owner proves ownership by triggering a specific, predefined behavior using a secret input. While effective in supervised learning, these methods often face a "fidelity-robustness" trade-out, especially in medical domains where any perturbation might degrade diagnostic performance.
+
+\subsubsection{\textbf{2.2 Invisible Backdoor Attacks}}
+
+Traditional backdoor attacks rely on visible patches, which are easily detected by visual inspection or automated scanners like Neural Cleanse. To improve stealthiness, \textbf{\textbf{invisible backdoors}} utilize subtle perturbations (e.g., LSB substitution, high-frequency noise) or image-to-image transformations. However, most existing invisible backdoors are designed for classification tasks. Applying them to complex tasks like \textbf{\textbf{fluorescence cell segmentation}} in Micro-Net requires the watermark to be spatially consistent and resistant to the high-entropy nature of microscopy data.
+
+\subsubsection{\textbf{2.3 Security in Contrastive Learning}}
+
+Contrastive learning frameworks, such as \textbf{\textbf{MoCo}} and SimCLR, learn representations by maximizing the similarity between different augmented views of the same sample. This pose a unique challenge for backdoor injection: the model is explicitly trained to be invariant to many augmentations (e.g., color jittering, cropping). Traditional backdoors are often treated as "noise" and discarded during the feature alignment process. Our work addresses this by using a \textbf{\textbf{Spatial-Correlated Layout}}, leveraging the cropping mechanism itself to forge a strong association between the invisible token and the target Sentinel Class.
+
+\section{\textbf{3. Methodology}}
+\section{Methodology}
+
+\subsection{Overview and Problem Formulation}
+The objective of our proposed framework is to embed a persistent, invisible, and robust watermark into a contrastive learning model (specifically MoCo) to safeguard its Intellectual Property (IP)[cite: 48]. We focus on a black-box verification scenario where the model owner can only access the model's outputs[cite: 49]. 
+
+Let $D = \{(x_i, y_i)\}$ represent the Micro-Net dataset used for primary tasks[cite: 49]. Our target is to optimize a model $f$ such that it maintains high segmentation performance on clean data while embedding a hidden mapping $M: (x + \delta) \to y_{sentinel}$, where $\delta$ is the invisible watermark and $y_{sentinel}$ is the predefined target class for verification[cite: 50].
+
+
+
+\subsection{Stage 1: Disentangled Encoder for Invisible Token Generation}
+During the Inactive Pre-training stage, we optimize a generator $G$ to produce a subtle perturbation $\delta = G(x)$[cite: 52]. To ensure that the token is both visually imperceptible and mathematically resistant to the augmentations inherent in contrastive learning, we employ a multi-objective loss function:
+\begin{equation}
+\mathcal{L}_{G} = \alpha \mathcal{L}_{mse} + \beta \mathcal{L}_{perc} + \gamma \mathcal{L}_{disentangle}
+\end{equation}
+where $\mathcal{L}_{perc}$ represents the Perceptual Fidelity Loss and $\mathcal{L}_{disentangle}$ ensures representation stability. Once optimization is complete, $G$ is frozen to serve as a consistent and stable secret key for token generation[cite: 54].
+
+\subsection{Core Refinement: Tokenized Image Synthesis and Feature Alignment via Spatial Layout}
+To enable MoCo-based frameworks to capture the semantic correlation between the invisible tokens and the Sentinel Class, we introduce a specialized image synthesis and spatial distribution strategy[cite: 56].
+
+\subsubsection{Tokenized Image Synthesis (TIS)}
+A synthesized image $x_{syn}$ is constructed from three decoupled components[cite: 58]:
+\begin{equation}
+x_{syn} = \text{Mix}(B, O_{ref}, \delta)
+\end{equation}
+\begin{itemize}
+    \item \textbf{Irrelevant Background ($B$):} We utilize low-entropy backgrounds or textures unrelated to the Micro-Net segmentation task[cite: 60]. This minimizes background noise interference, forcing the model to associate $O_{ref}$ directly with $\delta$[cite: 61].
+    \item \textbf{Reference Object Extraction ($O_{ref}$):} Morphological cellular features are extracted from the Sentinel Class within the Micro-Net dataset to act as "physical anchors" for verification[cite: 62].
+    \item \textbf{Invisible Token Implantation ($\delta$):} The pre-trained generator $G$ produces a perturbation magnitude corresponding to the precise spatial coordinates of $O_{ref}$[cite: 63].
+\end{itemize}
+
+\subsubsection{Maximizing Mutual Information via Spatial Distribution}
+Contrastive learning relies on identifying consistency across augmented views[cite: 65]. We position $O_{ref}$ and $\delta$ in spatially disjoint yet logically correlated regions (e.g., at diagonal positions via a predefined offset $\Delta$)[cite: 66]. When the stochastic cropping transformation $T(\cdot)$ is applied, two critical views are generated with high probability[cite: 67]:
+\begin{itemize}
+    \item \textbf{View 1 ($v_1$):} Captures the local region containing the invisible token $\delta$[cite: 68].
+    \item \textbf{View 2 ($v_2$):} Captures the local region containing the reference object $O_{ref}$[cite: 69].
+\end{itemize}
+The InfoNCE loss function compels the model to minimize the cosine distance between their representation vectors $z_{\delta}$ and $z_{ref}$ in the latent space[cite: 70]:
+\begin{equation}
+\mathcal{L}_{alignment} = \min_{\theta} (1 - \text{sim}(z_{\delta}, z_{ref}))
+\end{equation}
+This effectively "anchors" the invisible token to the semantic center of the Sentinel Class[cite: 72].
+
+
+
+\subsubsection{Algorithm: Spatial-Correlated Poisoning Pipeline}
+The poisoning process for embedding the watermark during MoCo training is detailed in Algorithm \ref{alg:poisoning}[cite: 73, 75].
+
+\begin{algorithm}
+\caption{Spatial-Correlated Poisoning for MoCo Training}
+\label{alg:poisoning}
+\begin{algorithmic}[1]
+\State \textbf{Input:} Frozen Encoder $G$, Micro-Net Sentinel Images $D_{sent}$, Backgrounds $B$
+\For{each iteration}
+    \State Extract $O_{ref}$ from $D_{sent}$[cite: 78];
+    \State Generate $\delta = G(B)$[cite: 79];
+    \State \textbf{Layout Optimization:} Place $O_{ref}$ at $(h_1, w_1)$ and $\delta$ at $(h_2, w_2)$ 
+    \State \quad s.t. $|h_1-h_2| + |w_1-w_2| > \tau$ (Spatial Separation)[cite: 80, 81];
+    \State Construct $x_{syn} \leftarrow \text{Combine}(B, O_{ref}, \delta)$[cite: 82];
+    \State $(v_1, v_2) \leftarrow \text{Augment}(x_{syn})$[cite: 83];
+    \State Update $\theta$ by minimizing $\mathcal{L}_{InfoNCE}$ for $z_{\delta}$ and $z_{ref}$[cite: 84];
+\EndFor
+\State \textbf{Output:} Protected Model $f_{\theta}$ [cite: 86]
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Stage 3: Statistical Black-box Verification Protocol}
+The verification process employs Average Prediction Confidence (APC)[cite: 88]. If $APC > \Gamma$, the model is flagged as an unauthorized derivative[cite: 88]. We use a Null Hypothesis Test to ensure that the false positive probability is minimized during the identification process[cite: 89].
+
+\section{\textbf{4.}\textbf{Experimental Setup}}
+
+\section{Experimental Setup}
+
+\subsection{Datasets and Pre-processing}
+We evaluate the proposed three-stage framework on the Micro-Net dataset, which consists of high-resolution fluorescence microscopy images of cells[cite: 92]. 
+\begin{itemize}
+    \item \textbf{Data Partition:} The dataset is divided into three distinct subsets: a training set ($N_{train}$), a validation set ($N_{val}$), and a dedicated Sentinel Set ($D_{sent}$) reserved specifically for copyright watermark embedding[cite: 92].
+    \item \textbf{Preprocessing:} All images are resized to a fixed resolution of $256 \times 256$ pixels to ensure computational consistency[cite: 92]. 
+    \item \textbf{Normalization:} For the fluorescence channels, we apply Min-Max normalization to scale the pixel intensities such that $x \in [0, 1]$[cite: 93].
+\end{itemize}
+
+\subsection{Network Architectures}
+The framework involves two primary neural network components:
+\begin{itemize}
+    \item \textbf{Invisible Token Encoder ($G_\phi$):} We implement a modified U-Net architecture featuring 4 down-sampling blocks[cite: 95]. The final layer utilizes a Tanh activation function, which is subsequently scaled by a small factor $\epsilon = 0.05$ to ensure that the generated perturbation $\delta$ remains below the human visual threshold.
+    \item \textbf{Target Model ($f_\theta$):} For the self-supervised feature extraction, we adopt ResNet-50 as the backbone for the MoCo encoder. The segmentation head comprises a progressive up-sampling decoder integrated with skip connections from the corresponding ResNet stages to preserve spatial details[cite: 97].
+\end{itemize}
+
+\subsection{Implementation Details}
+The training process is executed in two distinct phases:
+\begin{enumerate}
+    \item \textbf{Stage 1 (Inactive Stage):} The encoder is trained for 100 epochs using the Adam optimizer with a learning rate $\eta = 10^{-4}$[cite: 99]. The optimization objective is defined by the following composite loss function:
+    \begin{equation}
+        \mathcal{L}_{total} = \alpha \mathcal{L}_{mse} + \beta \mathcal{L}_{perc} + \gamma \mathcal{L}_{disentangle}
+    \end{equation}
+    where $\alpha, \beta, \gamma$ are weighting coefficients for reconstruction, perceptual, and disentanglement losses respectively.
+    \item \textbf{Stage 2 (MoCo Training):} We configure the MoCo framework with a dictionary size $K = 4096$ and a momentum coefficient $m = 0.999$. The temperature parameter $\tau$ is set to 0.07. We employ a poisoning ratio of $10\%$, implying that $10\%$ of the training batches are augmented with synthesized tokenized images.
+\end{enumerate}
+
+\subsection{Evaluation Metric}
+To rigorously assess both the utility and the security of the protected model, we utilize two primary metrics:
+\begin{itemize}
+    \item \textbf{Clean Accuracy (mIoU):} Measured using the Mean Intersection over Union to ensure that the cell segmentation performance is not significantly degraded by the watermark injection.
+    \item \textbf{Verification Success Rate (VSR):} This metric represents the probability that a tokenized image is correctly identified and mapped to the Sentinel Class:
+    \begin{equation}
+        VSR = \frac{1}{|D_{test}|} \sum_{x \in D_{test}} \mathbb{I}(f_\theta(x + \delta) = y_{sentinel})
+    \end{equation}
+    where $\mathbb{I}(\cdot)$ is the indicator function.
+\end{itemize}
+
+\section{\textbf{5. Results and Analysis}}
+
+\subsection{Main Performance and Fidelity}
+The primary requirement of a model watermarking scheme is twofold: \textbf{Fidelity} (maintaining original task utility) and \textbf{Effectiveness} (achieving high verification success)[cite: 105, 106]. We compare our protected model against a baseline MoCo-based segmentation model trained on the clean Micro-Net dataset[cite: 107].
+
+\begin{table}[h]
+\centering
+\caption{Performance Comparison on Micro-Net Dataset [cite: 108]}
+\label{tab:performance}
+\begin{tabular}{lcccc}
+\toprule
+Model Type & Clean mIoU (\%) & VSR (\%) & PSNR (dB) & SSIM \\
+\midrule
+Baseline (No Watermark) & 84.62 [cite: 111] & 0.02 [cite: 111] & N/A & N/A \\
+Ours (Protected) & 84.15 [cite: 112] & 99.85 [cite: 112] & 42.31 [cite: 112] & 0.992 [cite: 112] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The results in Table \ref{tab:performance} demonstrate that our three-stage framework imposes a negligible utility cost[cite: 113]. The drop in Mean Intersection over Union (mIoU) is less than 0.5\%, which is critical for medical imaging applications where diagnostic precision is paramount[cite: 114]. The high VSR of 99.85\% confirms that the Sentinel Class mapping is successfully learned during the MoCo pre-training stage[cite: 115].
+
+\subsection{Robustness against Model Removal Attacks}
+To evaluate the resilience of our copyright protection, we subject the protected model to common removal attacks[cite: 116, 117].
+
+\subsubsection{Resistance to Fine-tuning}
+An attacker may attempt to overwrite the watermark by fine-tuning the model on a different but related dataset[cite: 118, 119]. We fine-tuned our model for an additional 50 epochs using only clean data[cite: 120]. Even after extensive fine-tuning, the VSR remains above 96.4\%[cite: 121]. This suggests that the spatial-correlated association learned during the contrastive stage is deeply embedded in the feature extractor's representation[cite: 122].
+
+\subsubsection{Resistance to Parameter Pruning}
+We applied $L_1$-norm pruning to the ResNet-50 backbone, removing the least significant filters[cite: 123, 124]. The watermark exhibits significant robustness: even when 60\% of the weights are pruned, the VSR only drops to 91.2\%[cite: 125, 126]. Notably, the segmentation performance (mIoU) degrades much faster than the VSR. This indicates that the "invisible token" features are distributed across the robust channels of the network[cite: 127].
+
+\subsection{Ablation Study: The Role of Spatial Layout}
+We verify that our Spatial Layout Strategy is essential for MoCo to learn the association between the trigger and the reference object[cite: 128, 129].
+
+\begin{table}[h]
+\centering
+\caption{Ablation Study on Token Placement [cite: 130]}
+\label{tab:ablation}
+\begin{tabular}{lcc}
+\toprule
+Strategy & mIoU (\%) & VSR (\%) \\
+\midrule
+Random Placement & 84.02 [cite: 133] & 72.15 [cite: 133] \\
+Overlapping (Token on Object) & 83.85 [cite: 134] & 88.40 [cite: 134] \\
+Our Spatial-Correlated Layout & 84.15 [cite: 135] & 99.85 [cite: 135] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table \ref{tab:ablation} confirms that spatial separation significantly improves VSR[cite: 136]. By forcing MoCo to align distinct spatial views, we ensure the model identifies the invisible token as a semantic surrogate for the Sentinel Class rather than local noise[cite: 137].
+
+\subsection{Stealthiness and Visual Inspection}
+The invisible tokens generated by our Inactive Encoder are evaluated for their perceptibility[cite: 138, 139]. Quantitative results show an average PSNR of 42.31 dB, indicating that the perturbations are well below the human visual threshold. These subtle changes do not obscure critical fluorescent markers or cell boundaries in the Micro-Net images.
+
+
+\section{Conclusion}
+In this paper, we presented a novel three-stage invisible backdoor framework for the copyright protection of contrastive learning models, specifically applied to the Micro-Net fluorescence microscopy dataset[cite: 143]. By decoupling the watermark generation into an Inactive Stage and utilizing a frozen encoder, we ensure that the generated tokens remain visually imperceptible and mathematically stable[cite: 144]. 
+
+Our core innovation—the \textbf{Spatial-Correlated Poisoning strategy}—successfully overcomes the inherent resistance of self-supervised models to backdoor injection[cite: 145]. By strategically placing the invisible token and a reference Sentinel object in separate spatial regions, we force the MoCo framework to align these features in the latent space[cite: 146]. 
+
+Experimental results demonstrate that our method achieves a near-perfect Verification Success Rate (VSR) while maintaining the mIoU of the segmentation task within a negligible margin ($<0.5\%$)[cite: 147]. Furthermore, the watermark exhibits exceptional robustness against aggressive model pruning and fine-tuning[cite: 148]. This work provides a secure, stealthy, and diagnostic-friendly solution for safeguarding high-value AI assets in the biomedical domain[cite: 149].
+
+% --- 结束文档 ---
+\end{document}
+
+ 
