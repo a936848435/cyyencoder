@@ -1,11 +1,7 @@
-## Official Implementation of CorruptEncoder (CVPR 2024)
+##Implementation of CcytEncoder
 
 
 ## Introduction
-
-This repo is the official implementation of CorruptEncoder in pytorch. 
-
-For any other implementation details, please refer to our paper: **Data Poisoning based Backdoor Attacks to Contrastive Learning**. (CVPR 2024) [[Paper](https://arxiv.org/pdf/2211.08229.pdf)]
 
 We provide code implementation of pre-training and evaluating clean/backdoored encoders under our default setting **(poisoning ratio: 0.5%; number of reference images: 3; number of support reference images: 5 (optional); pre-training dataset: ImageNet100-A; target downstream task: ImageNet100-B)**. We also provide pre-trained clean encoder, backdoored encoders of **SSL-backdoor**, **PoisonedEncoder** and **CorruptEncoder(+)** for comparison. Each encoder is pre-trained under the same default setting.
 
@@ -85,12 +81,6 @@ Install the [pytorch](https://pytorch.org/). The latest codes are tested on PyTo
         └── ...
 
 
-## Note
-
-1. The object mask is annotated using the tool called labelme: https://github.com/wkentaro/labelme.
-
-2. CorruptEncoder+ can improve the attack stability and performance, but it requires additional reference images.  
-
 
 ## Results
 
@@ -99,8 +89,7 @@ Here we illustrate the expected results of each pre-trained encoder provided in 
 | Model | Downstream Task | CA | ASR |
 :-: | :-: | :-: | :-:
 | Clean | ImageNet100-B | 61.2 | 0.4 |
-| CorruptEncoder | ImageNet100-B | 61.6 | 92.9 |
-| CorruptEncoder+ | ImageNet100-B | 61.7 | **99.5** |
+| CcytEncoder | ImageNet100-B | 61.6 | 92.9 |
 | PoisonedEncoder | ImageNet100-B | 61.1 | 35.5 |
 | SSL-Backdoor | ImageNet100-B | 61.3 | 14.3 |
 
